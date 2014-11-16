@@ -15,6 +15,10 @@ if (Meteor.isClient) {
     },
     hideCompleted: function () {
       return Session.get("hideCompleted");
+    },
+    // Add to Template.body.helpers
+    incompleteCount: function () {
+      return Tasks.find({checked: {$ne: true}}).count();
     }
   });
   // Inside the if (Meteor.isClient) block, right after Template.body.helpers:
@@ -31,9 +35,10 @@ if (Meteor.isClient) {
 
     Tasks.insert({
       text: text,
-      createdAt: new Date() // current time
+      createdAt: new Date(),            // current time
+      owner: Meteor.userId(),           // _id of logged in user
+      username: Meteor.user().username  // username of logged in user
     });
-
     // Clear form
     event.target.text.value = "";
 
@@ -50,5 +55,9 @@ if (Meteor.isClient) {
     "click .delete": function () {
       Tasks.remove(this._id);
     }
+  });
+  // At the bottom of the client code
+  Accounts.ui.config({
+    passwordSignupFields: "USERNAME_ONLY"
   });
 }
