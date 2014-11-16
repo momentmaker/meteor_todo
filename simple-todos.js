@@ -2,30 +2,43 @@
 Tasks = new Mongo.Collection("tasks");
 
 if (Meteor.isClient) {
-  // This code only runs on the client
+  // Replace the existing Template.body.helpers
   Template.body.helpers({
     tasks: function () {
-      return Tasks.find({}, {sort: {createdAt: -1}});
+      if (Session.get("hideCompleted")) {
+        // If hide completed is checked, filter tasks
+        return Tasks.find({checked: {$ne: true}}, {sort: {createdAt: -1}});
+      } else {
+        // Otherwise, return all of the tasks
+        return Tasks.find({}, {sort: {createdAt: -1}});
+      }
+    },
+    hideCompleted: function () {
+      return Session.get("hideCompleted");
     }
   });
-
   // Inside the if (Meteor.isClient) block, right after Template.body.helpers:
   Template.body.events({
-      "submit .new-task": function (event) {
-      // This function is called when the new task form is submitted
-      console.log(event);
-      var text = event.target.text.value;
+    // Add to Template.body.events
+    "change .hide-completed input": function (event) {
+      Session.set("hideCompleted", event.target.checked);
+    },
 
-      Tasks.insert({
-        text: text,
-        createdAt: new Date() // current time
-      });
+    "submit .new-task": function (event) {
+    // This function is called when the new task form is submitted
+    console.log(event);
+    var text = event.target.text.value;
 
-      // Clear form
-      event.target.text.value = "";
+    Tasks.insert({
+      text: text,
+      createdAt: new Date() // current time
+    });
 
-      // Prevent default form submit
-      return false;
+    // Clear form
+    event.target.text.value = "";
+
+    // Prevent default form submit
+    return false;
     }
   });
   // In the client code, below everything else
